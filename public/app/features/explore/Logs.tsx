@@ -57,14 +57,16 @@ interface Props {
   range?: RawTimeRange;
   scanning?: boolean;
   scanRange?: RawTimeRange;
+  dedupStrategy: LogsDedupStrategy;
   onChangeTime?: (range: RawTimeRange) => void;
   onClickLabel?: (label: string, value: string) => void;
   onStartScanning?: () => void;
   onStopScanning?: () => void;
+  onDedupStrategyChange: (dedupStrategy: LogsDedupStrategy) => void;
 }
 
 interface State {
-  dedup: LogsDedupStrategy;
+  // dedup: LogsDedupStrategy;
   deferLogs: boolean;
   hiddenLogLevels: Set<LogLevel>;
   renderAll: boolean;
@@ -78,7 +80,7 @@ export default class Logs extends PureComponent<Props, State> {
   renderAllTimer: NodeJS.Timer;
 
   state = {
-    dedup: LogsDedupStrategy.none,
+    // dedup: LogsDedupStrategy.none,
     deferLogs: true,
     hiddenLogLevels: new Set(),
     renderAll: false,
@@ -111,12 +113,14 @@ export default class Logs extends PureComponent<Props, State> {
   }
 
   onChangeDedup = (dedup: LogsDedupStrategy) => {
-    this.setState(prevState => {
-      if (prevState.dedup === dedup) {
-        return { dedup: LogsDedupStrategy.none };
-      }
-      return { dedup };
-    });
+    const { onDedupStrategyChange } = this.props;
+    // this.setState(prevState => {
+    if (this.props.dedupStrategy === dedup) {
+      return onDedupStrategyChange(LogsDedupStrategy.none);
+    }
+    return onDedupStrategyChange(dedup);
+    // return { dedup };
+    // });
   };
 
   onChangeLabels = (event: React.SyntheticEvent) => {
@@ -171,17 +175,19 @@ export default class Logs extends PureComponent<Props, State> {
       return null;
     }
 
-    const { dedup, deferLogs, hiddenLogLevels, renderAll, showLocalTime, showUtc } = this.state;
+    const { /*dedup,*/ deferLogs, hiddenLogLevels, renderAll, showLocalTime, showUtc,  } = this.state;
     let { showLabels } = this.state;
+    const { dedupStrategy } = this.props;
     const hasData = data && data.rows && data.rows.length > 0;
-    const showDuplicates = dedup !== LogsDedupStrategy.none;
+    const showDuplicates = dedupStrategy !== LogsDedupStrategy.none;
 
     // Filtering
     const filteredData = filterLogLevels(data, hiddenLogLevels);
-    const dedupedData = dedupLogRows(filteredData, dedup);
+    const dedupedData = dedupLogRows(filteredData, dedupStrategy);
     const dedupCount = dedupedData.rows.reduce((sum, row) => sum + row.duplicates, 0);
     const meta = [...data.meta];
-    if (dedup !== LogsDedupStrategy.none) {
+
+    if (dedupStrategy !== LogsDedupStrategy.none) {
       meta.push({
         label: 'Dedup count',
         value: dedupCount,
@@ -233,7 +239,7 @@ export default class Logs extends PureComponent<Props, State> {
                   key={i}
                   value={dedupType}
                   onChange={this.onChangeDedup}
-                  selected={dedup === dedupType}
+                  selected={dedupStrategy === dedupType}
                   tooltip={LogsDedupDescription[dedupType]}
                 >
                   {dedupType}

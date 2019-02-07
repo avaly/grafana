@@ -18,6 +18,7 @@ import {
   ExploreUIState,
 } from 'app/types/explore';
 import { actionCreatorFactory, noPayloadActionCreatorFactory, ActionOf } from 'app/core/redux/actionCreatorFactory';
+import { LogsDedupStrategy } from 'app/core/logs_model';
 
 /**  Higher order actions
  *
@@ -180,6 +181,8 @@ export interface SplitOpenPayload {
   itemState: ExploreItemState;
 }
 
+//
+
 export interface ToggleTablePayload {
   exploreId: ExploreId;
 }
@@ -190,6 +193,14 @@ export interface ToggleGraphPayload {
 
 export interface ToggleLogsPayload {
   exploreId: ExploreId;
+}
+
+export interface UpdateUIStatePayload extends Partial<ExploreUIState>{
+  exploreId: ExploreId;
+}
+export interface ChangeDedupStrategyPayload {
+  exploreId: ExploreId;
+  dedupStrategy: LogsDedupStrategy;
 }
 
 export interface UpdateDatasourceInstancePayload {
@@ -365,6 +376,11 @@ export const splitCloseAction = noPayloadActionCreatorFactory('explore/SPLIT_CLO
  */
 export const splitOpenAction = actionCreatorFactory<SplitOpenPayload>('explore/SPLIT_OPEN').create();
 export const stateSaveAction = noPayloadActionCreatorFactory('explore/STATE_SAVE').create();
+
+/**
+ * Expand/collapse the table result viewer. When collapsed, table queries won't be run.
+ */
+export const updateUIStateAction = actionCreatorFactory<UpdateUIStatePayload>('explore/UPDATE_UI_STATE').create();
 
 /**
  * Expand/collapse the table result viewer. When collapsed, table queries won't be run.
